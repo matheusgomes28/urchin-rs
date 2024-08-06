@@ -1,8 +1,6 @@
-use std::{any, net::Ipv4Addr, time::Duration};
+use std::{net::Ipv4Addr, time::Duration};
 
-use anyhow::Context;
-use sea_orm::{ActiveModelTrait, ActiveValue::NotSet, ConnectOptions, DeriveEntityModel, DerivePrimaryKey, EnumIter, PrimaryKeyTrait};
-use serde::{Deserialize, Serialize};
+use sea_orm::{ActiveModelTrait, ConnectOptions};
 
 mod posts;
 
@@ -23,7 +21,6 @@ pub struct Database {
 impl Database {
     // TODO : this has to take the database name, protocol, user, pass, etc
     pub async fn new(ip: &str, port: u16) -> anyhow::Result<Self> {
-
         // build the connection string here
         let conn_str = format!("mysql://root:root@{ip}/urchin_rs");
 
@@ -51,8 +48,7 @@ impl Database {
         })
     }
 
-    pub async fn add_post(&self, title: &str, excerpt: &str, content: &str) -> anyhow::Result<()>
-    {
+    pub async fn add_post(&self, title: &str, excerpt: &str, content: &str) -> anyhow::Result<()> {
         // insert everything into db with ORM
         let post = posts::ActiveModel {
             id: sea_orm::ActiveValue::NotSet,
