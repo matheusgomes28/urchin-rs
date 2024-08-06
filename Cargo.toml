@@ -1,0 +1,11 @@
+[workspace]
+
+resolver = "2"
+
+members = [ "common",
+    "migration",
+    "urchin-admin-app",
+    "urchin-app",
+]
+
+[env]

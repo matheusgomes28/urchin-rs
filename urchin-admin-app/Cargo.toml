@@ -1,0 +1,11 @@
+[package]
+name = "urchin-admin-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.86"
+axum = "0.7.5"
+common = { path = "../common" }
+sea-orm = { version = "1.0.0", features = [ "sqlx-mysql", "runtime-tokio-native-tls", "macros" ] }
+tokio = { version = "1.39.2", features = ["full"] }
