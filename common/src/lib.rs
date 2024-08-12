@@ -3,10 +3,9 @@ use std::{net::Ipv4Addr, time::Duration};
 use sea_orm::{ActiveModelTrait, ConnectOptions};
 
 mod posts;
+mod app_error;
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+pub use app_error::AppError;
 
 pub struct Database {
     /// The IP for the database connection
@@ -48,7 +47,7 @@ impl Database {
         })
     }
 
-    pub async fn add_post(&self, title: &str, excerpt: &str, content: &str) -> anyhow::Result<()> {
+    pub async fn add_post(&self, title: &str, excerpt: &str, content: &str) -> anyhow::Result<i32> {
         // insert everything into db with ORM
         let post = posts::ActiveModel {
             id: sea_orm::ActiveValue::NotSet,
@@ -57,20 +56,12 @@ impl Database {
             excerpt: sea_orm::ActiveValue::Set(excerpt.to_string()),
         };
 
-        post.insert(&self._db_connection)
+        let ent = post.insert(&self._db_connection)
             .await
-            .map_err(anyhow::Error::msg)
-            .map(|_| ()) // this feels ermmmm....
-    }
-}
+            .map_err(anyhow::Error::msg)?;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+        let inserted_id = ent.id;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+        Ok(inserted_id)
     }
 }

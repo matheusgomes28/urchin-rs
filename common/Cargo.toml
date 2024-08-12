@@ -5,6 +5,8 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.86"
+axum = { version = "0.7.5", features = [ "macros" ] }
+http = "1.1.0"
 log = "0.4.22"
 sea-orm = { version = "1.0.0", features = [ "sqlx-mysql", "runtime-tokio-native-tls", "macros" ] }
 serde = "1.0.204"

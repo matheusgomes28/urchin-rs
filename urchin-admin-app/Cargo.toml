@@ -4,7 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.86"
 axum = { version = "0.7.5", features = [ "macros" ] }
 common = { path = "../common" }
+http = "1.1.0"
 sea-orm = { version = "1.0.0", features = [ "sqlx-mysql", "runtime-tokio-native-tls", "macros" ] }
+serde = "1.0.204"
 tokio = { version = "1.39.2", features = ["full"] }
