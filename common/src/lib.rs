@@ -1,11 +1,14 @@
 use std::{net::Ipv4Addr, time::Duration};
 
-use sea_orm::{ActiveModelTrait, ConnectOptions};
+use anyhow::Context;
+use http::StatusCode;
+use sea_orm::{ActiveModelTrait, ConnectOptions, EntityTrait, ModelTrait};
 
-mod posts;
 mod app_error;
+mod posts;
 
 pub use app_error::AppError;
+pub use posts::{AddPostRequest, AddPostResponse, GetPostResponse, DeletePostResponse};
 
 pub struct Database {
     /// The IP for the database connection
@@ -56,12 +59,47 @@ impl Database {
             excerpt: sea_orm::ActiveValue::Set(excerpt.to_string()),
         };
 
-        let ent = post.insert(&self._db_connection)
+        let ent = post
+            .insert(&self._db_connection)
             .await
             .map_err(anyhow::Error::msg)?;
 
         let inserted_id = ent.id;
 
         Ok(inserted_id)
+    }
+
+    pub async fn get_post(&self, post_id: i32) -> anyhow::Result<GetPostResponse, AppError> {
+        // insert everything into db with ORM
+        let post = posts::Entity::find_by_id(post_id)
+            .one(&self._db_connection)
+            .await
+            .map_err(|e| AppError{err_msg: e.to_string(), status_code: StatusCode::INTERNAL_SERVER_ERROR})?
+            .context("could not find post id in database")
+            .map_err(|e| AppError{err_msg: e.to_string(), status_code: StatusCode::BAD_REQUEST})?;
+
+        Ok(GetPostResponse {
+            content: post.content,
+            excerpt: post.excerpt,
+            post_id: post.id,
+            title: post.title,
+        })
+    }
+
+    pub async fn delete_post(&self, post_id: i32) -> anyhow::Result<DeletePostResponse, AppError> {
+
+        let post = posts::Entity::find_by_id(post_id)
+            .one(&self._db_connection)
+            .await
+            .map_err(|e| AppError{err_msg: e.to_string(), status_code: StatusCode::INTERNAL_SERVER_ERROR})?
+            .context("could not find post id in database")
+            .map_err(|e| AppError{err_msg: e.to_string(), status_code: StatusCode::BAD_REQUEST})?;
+
+        let _delete_res = post
+            .delete(&self._db_connection)
+            .await
+            .map_err(|e| AppError{err_msg: e.to_string(), status_code: StatusCode::INTERNAL_SERVER_ERROR})?;
+
+        Ok(DeletePostResponse{post_id})
     }
 }

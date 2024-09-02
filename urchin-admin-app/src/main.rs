@@ -1,24 +1,10 @@
 use std::sync::Arc;
 
-use axum::routing::post;
+use axum::routing::{delete, get, post};
 use axum::{debug_handler, extract, Extension, Json, Router};
-use common::{AppError, Database};
+use common::{AddPostRequest, AddPostResponse, AppError, Database, DeletePostResponse, GetPostResponse};
 use http::StatusCode;
-use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
-
-// Data that user will pass to the endpoint
-#[derive(Deserialize)]
-struct AddPostRequest {
-    pub title: String,
-    pub content: String,
-    pub excerpt: String,
-}
-
-#[derive(Serialize)]
-struct AddPostResponse {
-    post_id: i32,
-}
 
 // TODO : Rename this to something more useful
 type DatabaseT = Arc<RwLock<Database>>;
@@ -30,6 +16,8 @@ async fn try_main() -> anyhow::Result<()> {
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/posts", post(add_post_handler))
+        .route("/posts/:id", get(get_post_handler))
+        .route("/posts/:id", delete(delete_post_handler))
         .layer(Extension(database));
 
     // run our app with hyper, listening globally on port 3000
@@ -54,30 +42,26 @@ async fn add_post_handler(
     Extension(database_lock): Extension<DatabaseT>,
     extract::Json(post_request): extract::Json<AddPostRequest>,
 ) -> Result<Json<AddPostResponse>, Json<AppError>> {
-
     // Check that everything is actually populated
-    if post_request.title.is_empty()
-    {
+    if post_request.title.is_empty() {
         // return some app error
-        return Err(Json(AppError{
+        return Err(Json(AppError {
             err_msg: "cannot have empty post title".into(),
             status_code: StatusCode::BAD_REQUEST,
         }));
     }
 
-    if post_request.excerpt.is_empty()
-    {
+    if post_request.excerpt.is_empty() {
         // return some app error
-        return Err(Json(AppError{
+        return Err(Json(AppError {
             err_msg: "cannot have empty post excerpt".into(),
             status_code: StatusCode::BAD_REQUEST,
         }));
     }
 
-    if post_request.content.is_empty()
-    {
+    if post_request.content.is_empty() {
         // return some app error
-        return Err(Json(AppError{
+        return Err(Json(AppError {
             err_msg: "cannot have empty post content".into(),
             status_code: StatusCode::BAD_REQUEST,
         }));
@@ -103,4 +87,28 @@ async fn add_post_handler(
     };
 
     Ok(Json(AddPostResponse { post_id }))
+}
+
+#[debug_handler]
+async fn get_post_handler(
+    Extension(database_lock): Extension<DatabaseT>,
+    extract::Path(post_id): extract::Path<i32>,
+) -> Result<Json<GetPostResponse>, AppError> {
+
+    let database = database_lock.read().await;
+    let post = database.get_post(post_id).await?;
+
+    Ok(Json(post))
+}
+
+#[debug_handler]
+async fn delete_post_handler(
+    Extension(database_lock): Extension<DatabaseT>,
+    extract::Path(post_id): extract::Path<i32>,
+) -> Result<Json<DeletePostResponse>, AppError> {
+
+    let database = database_lock.read().await;
+    let post = database.delete_post(post_id).await?;
+
+    Ok(Json(post))
 }

@@ -25,3 +25,32 @@ pub enum Relation {}
 // }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+
+// Urchin stuff only
+// Data that user will pass to the endpoint
+#[derive(Deserialize)]
+pub struct AddPostRequest {
+    pub title: String,
+    pub content: String,
+    pub excerpt: String,
+}
+
+#[derive(Serialize)]
+pub struct AddPostResponse {
+    pub post_id: i32,
+}
+
+#[derive(Serialize)]
+pub struct DeletePostResponse {
+    pub post_id: i32,
+}
+
+#[derive(Serialize)]
+pub struct GetPostResponse
+{
+    pub post_id: i32,
+    pub title: String,
+    pub content: String,
+    pub excerpt: String,
+}
