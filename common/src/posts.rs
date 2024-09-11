@@ -46,7 +46,7 @@ pub struct DeletePostResponse {
     pub post_id: i32,
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub struct GetPostResponse
 {
     pub post_id: i32,

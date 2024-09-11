@@ -9,6 +9,7 @@ axum = { version = "0.7.5", features = [ "macros" ] }
 clap = { version = "4.5.17", features = ["derive"] }
 common = { path = "../common" }
 log = "0.4.22"
+minijinja = "2.2.0"
 sea-orm = { version = "1.0.0", features = [ "sqlx-mysql", "runtime-tokio-native-tls", "macros" ] }
 serde = "1.0.204"
 tokio = { version = "1.39.2", features = ["full"] }

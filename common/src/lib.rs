@@ -2,7 +2,9 @@ use std::{net::Ipv4Addr, time::Duration};
 
 use anyhow::Context;
 use http::StatusCode;
-use sea_orm::{ActiveModelTrait, ConnectOptions, EntityTrait, ModelTrait};
+use sea_orm::{
+    ActiveModelTrait, ConnectOptions, EntityTrait, ModelTrait
+};
 
 mod app_error;
 mod posts;
@@ -78,9 +80,15 @@ impl Database {
         let post = posts::Entity::find_by_id(post_id)
             .one(&self._db_connection)
             .await
-            .map_err(|e| AppError{err_msg: e.to_string(), status_code: StatusCode::INTERNAL_SERVER_ERROR})?
+            .map_err(|e| AppError {
+                err_msg: e.to_string(),
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+            })?
             .context("could not find post id in database")
-            .map_err(|e| AppError{err_msg: e.to_string(), status_code: StatusCode::BAD_REQUEST})?;
+            .map_err(|e| AppError {
+                err_msg: e.to_string(),
+                status_code: StatusCode::BAD_REQUEST,
+            })?;
 
         Ok(GetPostResponse {
             content: post.content,
@@ -90,20 +98,52 @@ impl Database {
         })
     }
 
-    pub async fn delete_post(&self, post_id: i32) -> anyhow::Result<DeletePostResponse, AppError> {
+    pub async fn get_posts(
+        &self,
+        offset: i32,
+        limit: i32,
+    ) -> anyhow::Result<Vec<GetPostResponse>, AppError> {
+        // insert everything into db with ORM
 
+        let posts = posts::Entity::find()
+            .cursor_by(posts::Column::Id)
+            .after(offset)
+            .before(offset + limit)
+            .all(&self._db_connection)
+            .await
+            .map_err(|e| AppError {
+                err_msg: e.to_string(),
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+            })?
+            .iter()
+            .map(|model| GetPostResponse{ post_id: model.id, title: model.title.clone(), content: model.content.clone(), excerpt: model.excerpt.clone() })
+            .collect::<Vec<GetPostResponse>>();
+
+        Ok(posts)
+    }
+
+    pub async fn delete_post(&self, post_id: i32) -> anyhow::Result<DeletePostResponse, AppError> {
         let post = posts::Entity::find_by_id(post_id)
             .one(&self._db_connection)
             .await
-            .map_err(|e| AppError{err_msg: e.to_string(), status_code: StatusCode::INTERNAL_SERVER_ERROR})?
+            .map_err(|e| AppError {
+                err_msg: e.to_string(),
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+            })?
             .context("could not find post id in database")
-            .map_err(|e| AppError{err_msg: e.to_string(), status_code: StatusCode::BAD_REQUEST})?;
+            .map_err(|e| AppError {
+                err_msg: e.to_string(),
+                status_code: StatusCode::BAD_REQUEST,
+            })?;
 
         let _delete_res = post
             .delete(&self._db_connection)
             .await
-            .map_err(|e| AppError{err_msg: e.to_string(), status_code: StatusCode::INTERNAL_SERVER_ERROR})?;
+            .map_err(|e| AppError {
+                err_msg: e.to_string(),
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+            })?;
 
-        Ok(DeletePostResponse{post_id})
+        Ok(DeletePostResponse { post_id })
     }
 }
