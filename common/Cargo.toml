@@ -11,3 +11,4 @@ log = "0.4.22"
 sea-orm = { version = "1.0.0", features = [ "sqlx-mysql", "runtime-tokio-native-tls", "macros" ] }
 serde = "1.0.204"
 serde_json = "1.0.127"
+toml = "0.8.19"
