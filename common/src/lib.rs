@@ -6,9 +6,13 @@ use sea_orm::{ActiveModelTrait, ConnectOptions, EntityTrait, ModelTrait};
 
 mod app_error;
 mod posts;
+mod config;
 
 pub use app_error::AppError;
 pub use posts::{AddPostRequest, AddPostResponse, GetPostResponse, DeletePostResponse};
+pub use config::UrchinConfig;
+
+// TODO : Move all of the database code elsewhere
 
 pub struct Database {
     /// The IP for the database connection
