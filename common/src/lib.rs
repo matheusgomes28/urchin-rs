@@ -2,17 +2,15 @@ use std::{net::Ipv4Addr, time::Duration};
 
 use anyhow::Context;
 use http::StatusCode;
-use sea_orm::{
-    ActiveModelTrait, ConnectOptions, EntityTrait, ModelTrait
-};
+use sea_orm::{ActiveModelTrait, ConnectOptions, EntityTrait, ModelTrait};
 
 mod app_error;
-mod posts;
 mod config;
+mod posts;
 
 pub use app_error::AppError;
-pub use posts::{AddPostRequest, AddPostResponse, GetPostResponse, DeletePostResponse};
 pub use config::UrchinConfig;
+pub use posts::{AddPostRequest, AddPostResponse, DeletePostResponse, GetPostResponse};
 
 // TODO : Move all of the database code elsewhere
 
@@ -30,7 +28,7 @@ impl Database {
     // TODO : this has to take the database name, protocol, user, pass, etc
     pub async fn new(ip: &str, port: u16) -> anyhow::Result<Self> {
         // build the connection string here
-        let conn_str = format!("mysql://root:root@{ip}/urchin_rs");
+        let conn_str = format!("mysql://root:root@{ip}:{port}/urchin_rs");
 
         // TODO : make this configurable from a file
         let mut opt = ConnectOptions::new(conn_str);
@@ -104,11 +102,20 @@ impl Database {
         limit: i32,
     ) -> anyhow::Result<Vec<GetPostResponse>, AppError> {
         // insert everything into db with ORM
+        if offset.is_negative() || limit.is_negative() {
+            return Err(AppError {
+                err_msg: "page number cannot be negative".into(),
+                status_code: StatusCode::BAD_REQUEST,
+            });
+        }
+
+        let start_offset = offset * limit;
+        let end_offset = (offset + 1) * limit;
 
         let posts = posts::Entity::find()
             .cursor_by(posts::Column::Id)
-            .after(offset)
-            .before(offset + limit)
+            .after(start_offset)
+            .before(end_offset)
             .all(&self._db_connection)
             .await
             .map_err(|e| AppError {
@@ -116,7 +123,12 @@ impl Database {
                 status_code: StatusCode::INTERNAL_SERVER_ERROR,
             })?
             .iter()
-            .map(|model| GetPostResponse{ post_id: model.id, title: model.title.clone(), content: model.content.clone(), excerpt: model.excerpt.clone() })
+            .map(|model| GetPostResponse {
+                post_id: model.id,
+                title: model.title.clone(),
+                content: model.content.clone(),
+                excerpt: model.excerpt.clone(),
+            })
             .collect::<Vec<GetPostResponse>>();
 
         Ok(posts)

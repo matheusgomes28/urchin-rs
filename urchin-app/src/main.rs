@@ -73,8 +73,13 @@ async fn main() {
     }
 }
 
+fn default_page_num() -> i32 {
+    0
+}
+
 #[derive(Deserialize)]
 struct HomeHandlerParams {
+    #[serde(default = "default_page_num")]
     page_num: i32,
 }
 

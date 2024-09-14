@@ -1,5 +1,5 @@
 # Address to the MariaDB database
-database_address = "localhost"
+database_address = "127.0.0.1"
 
 # User to access datbaase
 database_user = "urchin"
@@ -29,7 +29,6 @@ cache_enabled = true
 # Recaptcha settings
 recaptcha_sitekey = "something-something"
 recaptcha_secret = "something-something-something"
-
 
 [navbar]
 links = [
