@@ -44,13 +44,3 @@ pub struct UrchinConfig {
     // navbar config
     pub navbar: NavbarConfig,
 }
-
-
-// [navbar]
-// links = [
-//     { name = "Home", href = "/", title = "Homepage" },
-//     { name = "About", href = "/about", title = "About page" },
-//     { name = "Services", href = "/services", title = "Services page" },
-//     { name = "Images", href = "/images", title = "Images page" },
-//     { name = "Contact", href = "/contact", title = "Contacts page" },
-// ]
