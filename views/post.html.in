@@ -3,15 +3,14 @@
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>Hello World</title>
+    <title>{{ title }}</title>
     <link rel="stylesheet" href="https://unpkg.com/simpledotcss/simple.min.css">
 </head>
 <body>
-    {% for post in posts %}
     <article>
-        <p1>{{ post.title }}</p1>
-        <p>{{ post.excerpt }}</p>
+        <h1>{{ title }} </h1>
+
+        {{ content }}
     </article>
-    {% endfor %}
 </body>
 </html>

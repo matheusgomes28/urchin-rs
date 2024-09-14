@@ -52,6 +52,7 @@ async fn try_main() -> anyhow::Result<()> {
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(home_handler))
+        .route("/posts/:id", get(post_handler))
         .layer(Extension(database));
 
     // run our app with hyper, listening globally on port 3000
@@ -128,4 +129,49 @@ async fn home_handler(
         })?;
 
     Ok(Html(template))
+}
+
+#[derive(Deserialize)]
+struct PostHandlerRequest {
+    id: i32,
+}
+
+#[debug_handler]
+async fn post_handler(
+    Extension(database_lock): Extension<DatabaseT>,
+    axum::extract::Path(request): axum::extract::Path<PostHandlerRequest>,
+) -> Result<Html<String>, Json<AppError>> {
+    let database = database_lock.read().await;
+    let post_contents = database.get_post(request.id).await?;
+
+    let html =
+        read_file("/home/matheus/development/urchin-rs/views/post.html.in").map_err(|e| {
+            AppError {
+                err_msg: e.to_string(),
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+            }
+        })?;
+
+    let mut env = Environment::new();
+    env.add_template("index", &html).map_err(|_| AppError {
+        err_msg: "could not parse template".into(),
+        status_code: StatusCode::INTERNAL_SERVER_ERROR,
+    })?;
+
+    let tmpl = env.get_template("index").map_err(|_| AppError {
+        err_msg: "could not get template".into(),
+        status_code: StatusCode::INTERNAL_SERVER_ERROR,
+    })?;
+
+    let parsed_post = GetPostResponse{
+        content: markdown::to_html(&post_contents.content),
+        ..post_contents
+    };
+
+    let html_contents = tmpl.render(parsed_post).map_err(|_| AppError {
+        err_msg: "could not render template".into(),
+        status_code: StatusCode::INTERNAL_SERVER_ERROR,
+    })?;
+
+    Ok(Html(html_contents))
 }

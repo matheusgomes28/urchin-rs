@@ -10,7 +10,7 @@ use tokio::sync::RwLock;
 type DatabaseT = Arc<RwLock<Database>>;
 
 async fn try_main() -> anyhow::Result<()> {
-    let database = Arc::new(RwLock::new(Database::new("0.0.0.0", 3336).await?));
+    let database = Arc::new(RwLock::new(Database::new("0.0.0.0", 3306).await?));
     // Axum for multiplexing the http connections to entpoints
     // build our application with a route
     let app = Router::new()
@@ -72,8 +72,8 @@ async fn add_post_handler(
     let post_id = match database
         .add_post(
             &post_request.title,
-            &post_request.content,
             &post_request.excerpt,
+            &post_request.content,
         )
         .await
     {
